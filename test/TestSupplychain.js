@@ -41,6 +41,89 @@ contract('SupplyChain', function(accounts) {
     console.log("Retailer: accounts[3] ", accounts[3])
     console.log("Consumer: accounts[4] ", accounts[4])
 
+    // Add the accounts to the specified roles
+    // Farmer Role
+    it("Should add account[1] to the Farmers", async() => {
+        const supplyChain = await SupplyChain.deployed()
+
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+        
+        // Watch the emitted event FarmerAdded()
+        var event = supplyChain.FarmerAdded()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [1] to Farmer Role
+        await supplyChain.addFarmer(originFarmerID)
+        
+        const result = await supplyChain.isFarmer(originFarmerID)
+        //const result = await farmerRole.isFarmer(originFarmerID)
+        
+        // Verify the result
+        assert.equal(result, true, "Error: Farmer Role not added")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
+    // Distributor Role
+    it("Should add account[2] to the Distributors", async () => {
+        const supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event DistributorAdded()
+        var event = supplyChain.DistributorAdded()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [2] to Distributor Role
+        await supplyChain.addDistributor(distributorID)
+        // Check if the account has been added
+        const result = await supplyChain.isDistributor(distributorID)
+        // Verify the result
+        assert.equal(result, true, "Error: Distributor Role not added")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
+    // Retailer Role
+    it("Should add account[3] to the Retailers", async () => {
+        const supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event RetailerAdded()
+        var event = supplyChain.RetailerAdded()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [3] to Retailer Role
+        await supplyChain.addRetailer(retailerID)
+        // Check if the account has been added
+        const result = await supplyChain.isRetailer(retailerID)
+        // Verify the result
+        assert.equal(result, true, "Error: Retailer Role not added")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+    // Consumer Role
+    it("Should add account[4] to the Consumers", async () => {
+        var supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event ConsumerAdded()
+        var event = supplyChain.ConsumerAdded()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [4] to Consumer Role
+        await supplyChain.addConsumer(consumerID)
+        // Check if the account has been added
+        const result = await supplyChain.isConsumer(consumerID)
+        // Verify the result
+        assert.equal(result, true, "Error: Consumer Role not added")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
     // 1st Test
     it("Testing smart contract function harvestItem() that allows a farmer to harvest coffee", async() => {
         const supplyChain = await SupplyChain.deployed()
@@ -49,34 +132,31 @@ contract('SupplyChain', function(accounts) {
         var eventEmitted = false
         
         // Watch the emitted event Harvested()
-        // var event = supplyChain.Harvested()
-        // await event.watch((err, res) => {
-        //     console.log("Event emitted ", res)
-        //     eventEmitted = true
-        // })
-        var event = supplyChain.Harvested({}, (err, event) => {eventEmitted = true})
-
-        // await supplyChain.addFarmer(originFarmerID);
+        var event = supplyChain.Harvested()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Harvested by calling function harvestItem()
-        await supplyChain.harvestItem(upc, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await supplyChain.harvestItem(upc, ownerID, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productID, productNotes, 0, {from: originFarmerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
         const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
         const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
-        console.log(resultBufferOne[0].toString());
-        console.log(resultBufferTwo[1].toString());
-
         // Verify the result set
+
         assert.equal(resultBufferOne[0], sku, 'Error: Invalid item SKU')
         assert.equal(resultBufferOne[1], upc, 'Error: Invalid item UPC')
-        assert.equal(resultBufferOne[2], originFarmerID, 'Error: Missing or Invalid ownerID')
+        assert.equal(resultBufferOne[2], ownerID, 'Error: Missing or Invalid ownerID')
         assert.equal(resultBufferOne[3], originFarmerID, 'Error: Missing or Invalid originFarmerID')
         assert.equal(resultBufferOne[4], originFarmName, 'Error: Missing or Invalid originFarmName')
         assert.equal(resultBufferOne[5], originFarmInformation, 'Error: Missing or Invalid originFarmInformation')
         assert.equal(resultBufferOne[6], originFarmLatitude, 'Error: Missing or Invalid originFarmLatitude')
         assert.equal(resultBufferOne[7], originFarmLongitude, 'Error: Missing or Invalid originFarmLongitude')
+        assert.equal(resultBufferTwo[2], productID, 'Error: Missing or Invalid productID')
+        assert.equal(resultBufferTwo[3], productNotes, 'Error: Missing or Invalid productNotes')
+        assert.equal(resultBufferTwo[4], 0, 'Error: Missing or Invalid productPrice')
         assert.equal(resultBufferTwo[5], 0, 'Error: Invalid item State')
         assert.equal(eventEmitted, true, 'Invalid event emitted')        
     })    
@@ -86,18 +166,24 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Processed()
-        
+        var event = supplyChain.Processed()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Processed by calling function processtItem()
-        
+        await supplyChain.processItem(upc, {from: originFarmerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        //const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
+        assert.equal(resultBufferTwo[5], 1, 'Error: Invalid item State')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
         
     })    
 
@@ -106,19 +192,24 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Packed()
-        
+        var event = supplyChain.Packed()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Packed by calling function packItem()
-        
+        await supplyChain.packItem(upc, {from: originFarmerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        //const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-        
+        assert.equal(resultBufferTwo[5], 2, 'Error: Invalid item State')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
     })    
 
     // 4th Test
@@ -126,19 +217,25 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event ForSale()
-        
+        var event = supplyChain.ForSale()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as ForSale by calling function sellItem()
-        
+        await supplyChain.sellItem(upc, productPrice, {from: originFarmerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        //const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-          
+        assert.equal(resultBufferTwo[4], productPrice, 'Error: Missing or Invalid productPrice')
+        assert.equal(resultBufferTwo[5], 3, 'Error: Invalid item State')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')  
     })    
 
     // 5th Test
@@ -146,20 +243,25 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Sold()
         var event = supplyChain.Sold()
-        
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Sold by calling function buyItem()
-        
+        await supplyChain.buyItem(upc, {value: productPrice, from: distributorID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        // const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-        
+        assert.equal(resultBufferTwo[5], 4, 'Error: Invalid item State')
+        assert.equal(resultBufferTwo[6], distributorID, 'Error: Missing or Invalid DistributorID')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')  
     })    
 
     // 6th Test
@@ -167,19 +269,23 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Shipped()
-        
+        var event = supplyChain.Shipped()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Sold by calling function buyItem()
-        
+        await supplyChain.shipItem(upc, {from: distributorID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        // const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        // const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-              
+        assert.equal(eventEmitted, true, 'Invalid event emitted')        
     })    
 
     // 7th Test
@@ -187,19 +293,25 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Received()
-        
+        var event = supplyChain.Received()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Sold by calling function buyItem()
-        
+        await supplyChain.receiveItem(upc, {from: retailerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        //const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-             
+        assert.equal(resultBufferTwo[5], 6, 'Error: Invalid item State')
+        assert.equal(resultBufferTwo[7], retailerID, 'Error: Missing or Invalid RetailerID')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')      
     })    
 
     // 8th Test
@@ -207,19 +319,33 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
         
         // Declare and Initialize a variable for event
-        
+        var eventEmitted = false
         
         // Watch the emitted event Purchased()
-        
+        var event = supplyChain.Purchased()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
 
         // Mark an item as Sold by calling function buyItem()
-        
+        await supplyChain.purchaseItem(upc, {from: consumerID})
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
 
         // Verify the result set
-        
+        assert.equal(resultBufferOne[0], sku, 'Error: Invalid item SKU')
+        assert.equal(resultBufferOne[1], upc, 'Error: Invalid item UPC')
+        assert.equal(resultBufferOne[2], ownerID, 'Error: Missing or Invalid ownerID')
+        assert.equal(resultBufferOne[3], originFarmerID, 'Error: Missing or Invalid originFarmerID')
+        assert.equal(resultBufferOne[4], originFarmName, 'Error: Missing or Invalid originFarmName')
+        assert.equal(resultBufferOne[5], originFarmInformation, 'Error: Missing or Invalid originFarmInformation')
+        assert.equal(resultBufferOne[6], originFarmLatitude, 'Error: Missing or Invalid originFarmLatitude')
+        assert.equal(resultBufferOne[7], originFarmLongitude, 'Error: Missing or Invalid originFarmLongitude')
+        assert.equal(resultBufferTwo[5], 7, 'Error: Invalid item State')
+        assert.equal(resultBufferTwo[8], consumerID, 'Error: Missing or Invalid ConsumerID')
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
     })    
 
     // 9th Test
@@ -227,9 +353,17 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+        const resultBufferOne = await supplyChain.fetchItemBufferOne.call(upc)
         
         // Verify the result set:
+        assert.equal(resultBufferOne[0], sku, 'Error: Invalid item SKU')
+        assert.equal(resultBufferOne[1], upc, 'Error: Invalid item UPC')
+        assert.equal(resultBufferOne[2], ownerID, 'Error: Missing or Invalid ownerID')
+        assert.equal(resultBufferOne[3], originFarmerID, 'Error: Missing or Invalid originFarmerID')
+        assert.equal(resultBufferOne[4], originFarmName, 'Error: Missing or Invalid originFarmName')
+        assert.equal(resultBufferOne[5], originFarmInformation, 'Error: Missing or Invalid originFarmInformation')
+        assert.equal(resultBufferOne[6], originFarmLatitude, 'Error: Missing or Invalid originFarmLatitude')
+        assert.equal(resultBufferOne[7], originFarmLongitude, 'Error: Missing or Invalid originFarmLongitude')
         
     })
 
@@ -238,11 +372,94 @@ contract('SupplyChain', function(accounts) {
         const supplyChain = await SupplyChain.deployed()
 
         // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
-        
+        const resultBufferTwo = await supplyChain.fetchItemBufferTwo.call(upc)
+           
         // Verify the result set:
+        assert.equal(resultBufferTwo[5], 7, 'Error: Invalid item State')
         
     })
 
-});
+    // Remove the accounts to the specified roles
+    // Farmer Role
+    it("Should remove account[1] to the Farmers", async() => {
+        const supplyChain = await SupplyChain.deployed()
 
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+        
+        // Watch the emitted event FarmerRemoved()
+        var event = supplyChain.FarmerRemoved()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [1] to Farmer Role
+        await supplyChain.renounceFarmer({ from: originFarmerID })
+        // Check if the account has been Removed
+        
+        const result = await supplyChain.isFarmer(originFarmerID)
+        
+        // Verify the result
+        assert.equal(result, false, "Error: Farmer Role not removed")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
+    // Distributor Role
+    it("Should remove account[2] to the Distributors", async () => {
+        const supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event DistributorRemoved()
+        var event = supplyChain.DistributorRemoved()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [2] to Distributor Role
+        await supplyChain.renounceDistributor({ from: distributorID })
+        // Check if the account has been Removed
+        const result = await supplyChain.isDistributor(distributorID)
+        // Verify the result
+        assert.equal(result, false, "Error: Distributor Role not removed")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
+    // Retailer Role
+    it("Should remove account[3] to the Retailers", async () => {
+        const supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event RetailerRemoved()
+        var event = supplyChain.RetailerRemoved()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [3] to Retailer Role
+        await supplyChain.renounceRetailer({ from:retailerID })
+        // Check if the account has been Removed
+        const result = await supplyChain.isRetailer(retailerID)
+        // Verify the result
+        assert.equal(result, false, "Error: Retailer Role not removed")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+    // Consumer Role
+    it("Should remove account[4] to the Consumers", async () => {
+        var supplyChain = await SupplyChain.deployed()
+        // Declare and Initialize a variable for event
+        var eventEmitted = false
+
+        // Watch the emitted event ConsumerRemoved()
+        var event = supplyChain.ConsumerRemoved()
+        await event.watch((err, res) => {
+            eventEmitted = true
+        })
+        // Add Account [4] to Consumer Role
+        await supplyChain.renounceConsumer({ from: consumerID })
+        // Check if the account has been Removed
+        const result = await supplyChain.isConsumer(consumerID)
+        // Verify the result
+        assert.equal(result, false, "Error: Consumer Role not removed")
+        assert.equal(eventEmitted, true, 'Invalid event emitted')
+    })
+
+});

@@ -171,7 +171,7 @@ App = {
 
     harvestItem: function(event) {
         event.preventDefault();
-        var processId = parseInt($(event.target).data('id'));
+        // var processId = parseInt($(event.target).data('id'));
 
         App.contracts.SupplyChain.deployed().then(function(instance) {
             return instance.harvestItem(
@@ -188,7 +188,7 @@ App = {
                 {from: App.metamaskAccountID}
             );
         }).then(function(result) {
-            // $("#ftc-item").text(result);
+            $("#ftc-item").text(result);
             console.log('harvestItem',result);
         }).catch(function(err) {
             console.log(err.message);
@@ -202,7 +202,7 @@ App = {
         App.contracts.SupplyChain.deployed().then(function(instance) {
             return instance.processItem(App.upc, {from: App.metamaskAccountID});
         }).then(function(result) {
-            $("#ftc-item").text(result);
+            // $("#ftc-item").text(result);
             console.log('processItem',result);
         }).catch(function(err) {
             console.log(err.message);
@@ -216,7 +216,7 @@ App = {
         App.contracts.SupplyChain.deployed().then(function(instance) {
             return instance.packItem(App.upc, {from: App.metamaskAccountID});
         }).then(function(result) {
-            $("#ftc-item").text(result);
+            // $("#ftc-item").text(result);
             console.log('packItem',result);
         }).catch(function(err) {
             console.log(err.message);
@@ -319,7 +319,7 @@ App = {
         App.contracts.SupplyChain.deployed().then(function(instance) {
           return instance.fetchItemBufferTwo.call(App.upc);
         }).then(function(result) {
-          $("#ftc-item").text(result);
+        //   $("#ftc-item").text(result);
           console.log('fetchItemBufferTwo', result);
         }).catch(function(err) {
           console.log(err.message);
