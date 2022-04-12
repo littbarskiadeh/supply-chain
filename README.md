@@ -29,7 +29,7 @@ Fair Trade Coffee is a blockchain Proof-of-Concept for tracking how your coffee 
  ### Contract Address:
 
  **EtherScan Contract Address:**: [Click Here]( *https://rinkeby.etherscan.io/address/0xae63c1c1b6510cbdef157c1d2b81449fa2948f29*)
-
+https://rinkeby.etherscan.io/address/0xae63c1c1b6510cbdef157c1d2b81449fa2948f29
  Contract Address: 0xAe63C1C1B6510CbDef157c1D2b81449fA2948f29
 
 # Supply chain & data auditing
